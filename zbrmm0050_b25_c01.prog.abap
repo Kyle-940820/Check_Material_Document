@@ -1,0 +1,73 @@
+*&---------------------------------------------------------------------*
+*& Include          ZBRMM0050_C01
+*&---------------------------------------------------------------------*
+
+* Class 정의.
+CLASS LCL_EVENT_HANDLER DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      " TREE NODE 더블 클릭 EVENT.
+      ON_NODE_DOUBLE_CLICK FOR EVENT NODE_DOUBLE_CLICK OF CL_GUI_SIMPLE_TREE
+        IMPORTING NODE_KEY,
+
+      " ALV HOTSPOT 클릭 EVENT.
+      ON_HOTSPOT_CLICK FOR EVENT HOTSPOT_CLICK OF CL_GUI_ALV_GRID
+        IMPORTING ES_ROW_NO E_COLUMN_ID,
+
+      " ALV TOOLBAR BUTTON 생성.
+      ON_TOOLBAR FOR EVENT TOOLBAR OF CL_GUI_ALV_GRID
+        IMPORTING E_OBJECT,
+
+      " ALV TOOLBAR BUTTON CLICK EVENT 생성.
+      ON_USER_COMMAND FOR EVENT USER_COMMAND OF CL_GUI_ALV_GRID
+        IMPORTING E_UCOMM.
+
+ENDCLASS.
+
+* Class 구현.
+CLASS LCL_EVENT_HANDLER IMPLEMENTATION.
+  METHOD ON_NODE_DOUBLE_CLICK.
+    PERFORM ON_NODE_DOUBLE_CLICK USING NODE_KEY.
+
+  ENDMETHOD.
+
+  METHOD ON_HOTSPOT_CLICK.
+    CLEAR GS_DISPLAY.
+
+    READ TABLE GT_DISPLAY INTO GS_DISPLAY INDEX ES_ROW_NO-ROW_ID.
+    IF  SY-SUBRC = 0.
+      CASE E_COLUMN_ID-FIELDNAME.
+        WHEN 'DOCNUM'. " ALV에서 자재문서번호 Hotspot 클릭 시.
+          CLEAR: GV_MODE, GV_PAGE.
+          PERFORM DIALOG_DOC.
+
+        WHEN 'PLTCODE'. " ALV에서 플랜트번호 Hotspot 클릭 시.
+          CLEAR ZTBMM1020.
+          PERFORM GET_PLT_DATA.
+          PERFORM DIALOG_PLT.
+
+        WHEN 'PONUM'. " ALV에서 구매오더번호 Hotspot 클릭 시.
+          PERFORM DIALOG_PO.
+
+        WHEN 'PORDNUM'. " ALV에서 생산오더번호 Hotspot 클릭 시.
+          PERFORM DIALOG_PORD.
+
+        WHEN 'SONUM'. " ALV에서 판매오더번호 Hotspot 클릭 시.
+          PERFORM DIALOG_SO.
+
+        WHEN 'MATCODE'. " ALV에서 자재번호 Hotspot 클릭 시.
+          PERFORM DIALOG_MATCODE.
+
+      ENDCASE.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD ON_TOOLBAR.
+    PERFORM HANDLE_TOOLBAR USING E_OBJECT. " ALV Toolbar에 Button 구현
+  ENDMETHOD.
+
+  METHOD ON_USER_COMMAND.
+    PERFORM HANDLE_USER_COMMAND USING E_UCOMM. " ALV Toolbar Button 클릭 시.
+  ENDMETHOD.
+
+ENDCLASS.
